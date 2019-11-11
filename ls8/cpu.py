@@ -7,7 +7,15 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.pc = 0
+        self.registers = [0] * 6
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, value, address):
+        self.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
@@ -62,4 +70,19 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        while True:
+            ir = self.ram[self.pc]
+            operand_a = self.ram[self.pc + 1]
+            operand_b = self.ram[self.pc + 2]
+
+
+            ops_to_skip = (ir >> 6) + 1
+
+            if ir == 0b00000001: # HLT
+                break
+            elif ir == 0b10000010: # LDI
+                self.registers[operand_a] = operand_b
+            elif ir == 0b01000111: # LDI
+                print(self.registers[operand_a])
+            
+            self.pc += ops_to_skip
