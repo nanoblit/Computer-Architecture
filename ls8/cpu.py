@@ -9,7 +9,7 @@ class CPU:
         """Construct a new CPU."""
         self.ram = [0] * 256
         self.pc = 0
-        self.registers = [0] * 6
+        self.registers = [0] * 8
 
         self.branchtable = {}
         self.branchtable[0b00000001] = self.handle_hlt
