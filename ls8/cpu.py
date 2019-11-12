@@ -11,28 +11,38 @@ class CPU:
         self.pc = 0
         self.registers = [0] * 6
 
+        self.branchtable = {}
+        self.branchtable[0b00000001] = self.handle_hlt
+        self.branchtable[0b10000010] = self.handle_ldi
+        self.branchtable[0b01000111] = self.handle_prn
+        self.branchtable[0b10100010] = self.handle_mul
+
     def ram_read(self, address):
         return self.ram[address]
 
     def ram_write(self, value, address):
         self.ram[address] = value
 
-    def load(self):
+    def load(self, filename):
         """Load a program into memory."""
 
+        program = []
+
+        try:
+            with open(filename) as f:
+                for line in f:
+                    comment_split = line.split("#")
+                    num = comment_split[0].strip()
+                    if len(num) == 0:
+                        continue
+                    value = int(num, 2)
+                    program.append(value)
+
+        except FileNotFoundError:
+            print(f"{filename} not found")
+            sys.exit(2)
+
         address = 0
-
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
 
         for instruction in program:
             self.ram[address] = instruction
@@ -68,6 +78,18 @@ class CPU:
 
         print()
 
+    def handle_hlt(self, operand_a, operand_b):
+        sys.exit(0)
+
+    def handle_ldi(self, operand_a, operand_b):
+        self.registers[operand_a] = operand_b
+
+    def handle_prn(self, operand_a, operand_b):
+        print(self.registers[operand_a])
+
+    def handle_mul(self, operand_a, operand_b):
+        self.registers[operand_a] *=  self.registers[operand_b]
+
     def run(self):
         """Run the CPU."""
         while True:
@@ -78,11 +100,6 @@ class CPU:
 
             ops_to_skip = (ir >> 6) + 1
 
-            if ir == 0b00000001: # HLT
-                break
-            elif ir == 0b10000010: # LDI
-                self.registers[operand_a] = operand_b
-            elif ir == 0b01000111: # LDI
-                print(self.registers[operand_a])
+            self.branchtable[ir](operand_a, operand_b)
             
             self.pc += ops_to_skip
