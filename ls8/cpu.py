@@ -16,6 +16,8 @@ class CPU:
         self.branchtable[0b10000010] = self.handle_ldi
         self.branchtable[0b01000111] = self.handle_prn
         self.branchtable[0b10100010] = self.handle_mul
+        self.branchtable[0b01000101] = self.handle_push
+        self.branchtable[0b01000110] = self.handle_pop
 
     def ram_read(self, address):
         return self.ram[address]
@@ -90,8 +92,25 @@ class CPU:
     def handle_mul(self, operand_a, operand_b):
         self.registers[operand_a] *=  self.registers[operand_b]
 
+    def handle_push(self, operand_a, operand_b):
+        reg = operand_a
+        val = self.registers[reg]
+
+        self.registers[7] -= 1
+        self.ram[self.registers[7]] = val
+
+    def handle_pop(self, operand_a, operand_b):
+        reg = operand_a
+        val = self.ram[self.registers[7]]
+
+        self.registers[reg] = val
+        self.registers[7] += 1
+
     def run(self):
         """Run the CPU."""
+
+        self.registers[7] = 0xF3
+        
         while True:
             ir = self.ram[self.pc]
             operand_a = self.ram[self.pc + 1]
