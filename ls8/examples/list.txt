@@ -1,0 +1,12 @@
+call:
+  print 10 + 10 = 20,
+  print 15 + 15 =  30
+  print 18 + 18 =  36
+  print 30 + 30 =  60
+
+  It implements printing, adding, calls
+
+interrupts:
+
+keyboard:
+  
