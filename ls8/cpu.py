@@ -11,13 +11,17 @@ class CPU:
         self.pc = 0
         self.registers = [0] * 8
 
-        self.branchtable = {}
-        self.branchtable[0b00000001] = self.handle_hlt
-        self.branchtable[0b10000010] = self.handle_ldi
-        self.branchtable[0b01000111] = self.handle_prn
-        self.branchtable[0b10100010] = self.handle_mul
-        self.branchtable[0b01000101] = self.handle_push
-        self.branchtable[0b01000110] = self.handle_pop
+        self.branchtable = {
+            0b00000001: self.handle_hlt,
+            0b10000010: self.handle_ldi,
+            0b01000111: self.handle_prn,
+            0b10100000: self.handle_add,
+            0b10100010: self.handle_mul,
+            0b01000101: self.handle_push,
+            0b01000110: self.handle_pop,
+            0b01010000: self.handle_call,
+            0b00010001: self.handle_ret
+        }
 
     def ram_read(self, address):
         return self.ram[address]
@@ -89,35 +93,51 @@ class CPU:
     def handle_prn(self, operand_a, operand_b):
         print(self.registers[operand_a])
 
+    def handle_add(self, operand_a, operand_b):
+        self.registers[operand_a] +=  self.registers[operand_b]
+
     def handle_mul(self, operand_a, operand_b):
         self.registers[operand_a] *=  self.registers[operand_b]
 
     def handle_push(self, operand_a, operand_b):
         reg = operand_a
         val = self.registers[reg]
-
-        self.registers[7] -= 1
+        self.registers[7] -= 1 # sp
         self.ram[self.registers[7]] = val
 
     def handle_pop(self, operand_a, operand_b):
         reg = operand_a
         val = self.ram[self.registers[7]]
-
         self.registers[reg] = val
+        self.registers[7] += 1 # sp
+
+    def handle_call(self, operand_a, operand_b):
+        # move stack pointer
+        self.registers[7] -= 1
+        # set top value in stack to the position to return
+        self.ram[self.registers[7]] = self.pc + 2
+        # set pc to the position stored in register
+        self.pc = self.registers[operand_a]
+
+    def handle_ret(self, operand_a, operand_b):
+        # store top value from the stack in pc
+        self.pc = self.ram[self.registers[7]] 
+        # move stack pointer
         self.registers[7] += 1
 
     def run(self):
         """Run the CPU."""
 
         self.registers[7] = 0xF3
-        
+
         while True:
             ir = self.ram[self.pc]
             operand_a = self.ram[self.pc + 1]
             operand_b = self.ram[self.pc + 2]
 
-
-            ops_to_skip = (ir >> 6) + 1
+            ops_to_skip = 0
+            if ir != 0b01010000 and ir != 0b00010001: # not call and not ret
+                ops_to_skip = (ir >> 6) + 1
 
             self.branchtable[ir](operand_a, operand_b)
             
