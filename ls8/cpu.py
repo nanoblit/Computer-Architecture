@@ -2,6 +2,16 @@
 
 import sys
 
+hlt = 0b00000001
+ldi = 0b10000010
+prn = 0b01000111
+add = 0b10100000
+mul = 0b10100010
+push = 0b01000101
+pop = 0b01000110
+call = 0b01010000
+ret = 0b00010001
+
 class CPU:
     """Main CPU class."""
 
@@ -12,15 +22,15 @@ class CPU:
         self.registers = [0] * 8
 
         self.branchtable = {
-            0b00000001: self.handle_hlt,
-            0b10000010: self.handle_ldi,
-            0b01000111: self.handle_prn,
-            0b10100000: self.handle_add,
-            0b10100010: self.handle_mul,
-            0b01000101: self.handle_push,
-            0b01000110: self.handle_pop,
-            0b01010000: self.handle_call,
-            0b00010001: self.handle_ret
+           hlt : self.handle_hlt,
+           ldi : self.handle_ldi,
+           prn : self.handle_prn,
+           add : self.handle_add,
+           mul : self.handle_mul,
+           push : self.handle_push,
+           pop : self.handle_pop,
+           call : self.handle_call,
+           ret : self.handle_ret
         }
 
     def ram_read(self, address):
@@ -140,7 +150,7 @@ class CPU:
             operand_b = self.ram[self.pc + 2]
 
             ops_to_skip = 0
-            if ir != 0b01010000 and ir != 0b00010001: # not call and not ret
+            if ir != call and ir != ret:
                 ops_to_skip = (ir >> 6) + 1
 
             self.branchtable[ir](operand_a, operand_b)
