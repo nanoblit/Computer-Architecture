@@ -102,14 +102,18 @@ class CPU:
     def handle_push(self, operand_a, operand_b):
         reg = operand_a
         val = self.registers[reg]
-        self.registers[7] -= 1 # sp
+        # move stack pointer
+        self.registers[7] -= 1
+        # set value in sp position in ram to val 
         self.ram[self.registers[7]] = val
 
     def handle_pop(self, operand_a, operand_b):
         reg = operand_a
         val = self.ram[self.registers[7]]
+        # set value in given register to val from stack
         self.registers[reg] = val
-        self.registers[7] += 1 # sp
+        # move stack pointer
+        self.registers[7] += 1 
 
     def handle_call(self, operand_a, operand_b):
         # move stack pointer
